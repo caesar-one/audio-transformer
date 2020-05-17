@@ -15,8 +15,9 @@ import h5py
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from .dataset import AudioDataset, load as dataset_load
-from .models import AudioTransformer
+from audiotransformer.dataset import AudioDataset
+from audiotransformer import dataset
+from audiotransformer.models import AudioTransformer
 from sklearn.metrics import classification_report
 from glob import glob
 from torch.utils.tensorboard import SummaryWriter
@@ -38,15 +39,14 @@ def train(model, criterion, optimizer, data, device):
     total_loss = 0.
     progress = tqdm(data, "Training")
     for X, y in progress:
-        X = X.permute((1, 0, 2)).to(device)  # convert to seq first shape and move to desired device
+        X = X.to(device)
         y = y.long()
         optimizer.zero_grad()
         output = model(X)
         output = output.cpu()
-        output_flat = output.view(-1, num_classes)
-        loss = criterion(output_flat, y)
+        loss = criterion(output, y)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
         optimizer.step()
         scheduler.step()
         total_loss += len(X) * loss.item()
@@ -59,14 +59,13 @@ def evaluate(model, criterion, data, device):
     y_true, y_pred = [], []
     with torch.no_grad():
         for X, y in tqdm(data, "Evaluation"):
-            X = X.permute((1, 0, 2)).to(device)  # convert to seq first shape and move to desired device
+            X = X.to(device)
             y = y.long()
             output = model(X)
             output = output.cpu()
-            output_flat = output.view(-1, num_classes)
             y_true += y.tolist()
-            y_pred += torch.argmax(output_flat, -1).tolist()
-            total_loss += len(X) * criterion(output_flat, y).item()
+            y_pred += torch.argmax(output, -1).tolist()
+            total_loss += len(X) * criterion(output, y).item()
     result = classification_report(y_true, y_pred, target_names=classes, digits=4, output_dict=True)
     result["loss"] = total_loss / len(data.dataset)
     result["pretty"] = classification_report(y_true, y_pred, target_names=classes, digits=4, output_dict=False)
@@ -98,7 +97,7 @@ if IN_COLAB:
         print("No dataset cache in runtime, ", end="")
         if drive_path + dataset_cache_name not in glob(drive_path + "*.h5"):
             print("creating... ", end="")
-            dataset_filename = dataset_load(dataset_path, dataset_cache_name, False)
+            dataset_filename = dataset.load(dataset_path, dataset_cache_name, False)
             #!cp {dataset_cache_name} / content / drive / My\ Drive /
         else:
             print("copying from Drive... ", end="")
@@ -107,7 +106,7 @@ if IN_COLAB:
 else:
     if dataset_cache_name not in glob("*.h5"):
         print("No dataset cache in runtime, creating... ")
-        dataset_filename = dataset_load(dataset_path, dataset_cache_name, False)
+        dataset_filename = dataset.load(dataset_path, dataset_cache_name, False)
         print("Done!")
 
 audio_data = h5py.File(dataset_cache_name, "r")
@@ -149,7 +148,7 @@ criterion = nn.CrossEntropyLoss()
 #if IN_COLAB:
 #    %tensorboard --logdir runs
 tensorboard_writer = SummaryWriter(log_dir="runs")
-tensorboard_writer.add_graph(model)
+tensorboard_writer.add_graph(model, input_to_model=torch.zeros((16,174,256)))
 
 model.to(device)
 for epoch in range(1, epochs + 1):
@@ -165,8 +164,8 @@ for epoch in range(1, epochs + 1):
                                                'val f1-score': val_results["macro avg"]["f1-score"]}, epoch)
     tensorboard_writer.add_scalars('Loss', {'train': train_loss, 'val': val_results["loss"]}, epoch)
     tensorboard_writer.add_text("Val report",
-                                "Val Loss: " + val_results["loss"] + "\nClassification report:\n" + val_results[
-                                    "pretty"], epoch)
+                                "Val Loss: " + str(val_results["loss"]) + "\nClassification report:\n" + str(val_results[
+                                    "pretty"]), epoch)
     # print("Val Loss:",val_results["loss"],"\nClassification report:\n",val_results["pretty"])
 
 if not load_in_RAM:
