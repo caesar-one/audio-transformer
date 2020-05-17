@@ -7,8 +7,8 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 
-DATASET_PATH = "UrbanSound8K/audio/"
-METADATA_PATH = "UrbanSound8K/metadata/UrbanSound8K.csv"
+DATASET_PATH = "../UrbanSound8K/audio/"
+METADATA_PATH = "../UrbanSound8K/metadata/UrbanSound8K.csv"
 
 class AudioDataset(Dataset):
     def __init__(self, X_desc, y_desc):
@@ -98,7 +98,7 @@ def load(path: str = "", save_filename: str = "audio_data.h5", debug: bool = Fal
             audio_array = audio_array[:samples_num]
             reshaped_array = np.zeros((samples_num,))
             reshaped_array[:audio_array.shape[0]] = audio_array
-            reshaped_array[0] += 0.5
+            #reshaped_array[0] += 0.5
             # Create spectrogram
             spec = librosa.feature.melspectrogram(reshaped_array, n_mels=256, hop_length=512) # todo add correct vals
             spec = librosa.power_to_db(spec)

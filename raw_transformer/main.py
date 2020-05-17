@@ -7,9 +7,9 @@ import torch.nn as nn
 #import torch.nn.functional as F
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from dataset import AudioDataset#, get_proper_shape
-import dataset
-from models import AudioTransformer
+from raw_transformer.dataset import AudioDataset#, get_proper_shape
+from raw_transformer import dataset
+from raw_transformer.models import AudioTransformer
 from sklearn.metrics import classification_report
 from glob import glob
 
