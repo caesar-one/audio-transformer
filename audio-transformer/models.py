@@ -6,22 +6,26 @@ from torch import nn
 from torch.nn import functional as F
 
 
-class AudioTransformerHF(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes):
-        super(AudioTransformerHF, self).__init__()
+class AudioTransformer(nn.Module):
+    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1):
+        super(AudioTransformer, self).__init__()
         self.config = BertConfig(
             hidden_size=d_model,
             num_hidden_layers=num_layers,
             intermediate_size=dim_feedforward,
-            num_attention_heads=nhead
+            num_attention_heads=nhead,
+            hidden_dropout_prob=dropout
         )
         self.encoder = BertModel(self.config)
-        self.decoder = LinearClassifier(d_model, num_classes)
+        self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
 
     def forward(self, x):
         x = self.encoder.forward(inputs_embeds=x)
-        x = self.decoder(x)
-        return x
+        # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
+        # the whole seq meaning. We are interested in the pooled output
+        pooled = x[1]
+        out = self.decoder(pooled)
+        return out
 
 
 class LinearClassifier(nn.Module):
@@ -39,16 +43,12 @@ class LinearClassifier(nn.Module):
         return x
 
 class SimpleLinearClassifier(nn.Module):
-    def __init__(self, hidden_size, num_classes):
+    def __init__(self, hidden_size, num_classes, dropout=0.1):
         super(SimpleLinearClassifier, self).__init__()
-        self.dense = nn.Linear(hidden_size, hidden_size)
-        self.layer_norm = nn.LayerNorm(hidden_size, eps=10e-12)
-        self.decoder = nn.Linear(hidden_size, num_classes)
+        self.dropout = nn.Dropout(dropout)
+        self.classifier = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        x = self.dense(x)
-        x = F.gelu(x)
-        x = self.layer_norm(x)
-        x = self.decoder(x)
+        x = self.dropout(x)
+        x = self.classifier(x)
         return x
-
