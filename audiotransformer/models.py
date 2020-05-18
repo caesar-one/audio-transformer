@@ -52,3 +52,24 @@ class SimpleLinearClassifier(nn.Module):
         x = self.dropout(x)
         x = self.classifier(x)
         return x
+
+class AudioReformer(nn.Module):
+    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1):
+        super(AudioReformer, self).__init__()
+        self.config = ReformerConfig(
+            #hidden_size=d_model,
+            #num_hidden_layers=num_layers,
+            #intermediate_size=dim_feedforward,
+            #num_attention_heads=nhead,
+            #hidden_dropout_prob=dropout
+        )
+        self.encoder = ReformerModel(self.config)
+        self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
+
+    def forward(self, x):
+        x = self.encoder.forward(inputs_embeds=x)
+        # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
+        # the whole seq meaning. We are interested in the pooled output
+        pooled = x[1]
+        out = self.decoder(pooled)
+        return out
