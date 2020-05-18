@@ -58,12 +58,14 @@ class AudioReformer(nn.Module):
         super(AudioReformer, self).__init__()
         self.config = config
         self.encoder = ReformerModel(self.config)
-        self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
+        self.decoder = SimpleLinearClassifier(int(d_model * 2), num_classes, dropout)
 
     def forward(self, x):
         x = self.encoder.forward(inputs_embeds=x)
-        # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
-        # the whole seq meaning. We are interested in the pooled output
-        pooled = x[1]
+        # x = (hidden_states,) <-- tuple
+        # pooled means that the token is enforced to assume the whole seq meaning.
+        # We are interested in first hidden state
+        x = x[0]
+        pooled = x[:,0,:]
         out = self.decoder(pooled)
         return out
