@@ -54,15 +54,9 @@ class SimpleLinearClassifier(nn.Module):
         return x
 
 class AudioReformer(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1):
+    def __init__(self, config, d_model, num_classes, dropout=0.1):
         super(AudioReformer, self).__init__()
-        self.config = ReformerConfig(
-            #hidden_size=d_model,
-            #num_hidden_layers=num_layers,
-            #intermediate_size=dim_feedforward,
-            #num_attention_heads=nhead,
-            #hidden_dropout_prob=dropout
-        )
+        self.config = config
         self.encoder = ReformerModel(self.config)
         self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
 
