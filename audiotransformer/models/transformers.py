@@ -22,7 +22,7 @@ class AudioTransformer(nn.Module):
             hidden_dropout_prob=dropout
         )
         self.encoder = BertModel(self.config)
-        self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
+        self.decoder = SimpleLinearClassifier(self.hidden_size, num_classes, dropout)
 
     def forward(self, x):
         if self.use_conv_embedding:
