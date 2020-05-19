@@ -229,25 +229,25 @@ class MSResNet(nn.Module):
         x0 = self.bn1(x0)
         x0 = self.relu(x0)
         x0 = self.maxpool(x0)
-        print(x0.shape)
+
         x = self.layer3x3_1(x0)
         x = self.layer3x3_2(x)
         x = self.layer3x3_3(x)
         # x = self.layer3x3_4(x)
         x = self.maxpool3(x)
-        print(x.shape)
+
         y = self.layer5x5_1(x0)
         y = self.layer5x5_2(y)
         y = self.layer5x5_3(y)
         # y = self.layer5x5_4(y)
         y = self.maxpool5(y)
-        print(y.shape)
+
         z = self.layer7x7_1(x0)
         z = self.layer7x7_2(z)
         z = self.layer7x7_3(z)
         # z = self.layer7x7_4(z)
         z = self.maxpool7(z)
-        print(z.shape)
+
         out = torch.cat([x, y, z], dim=1)
 
         out = out.squeeze()
