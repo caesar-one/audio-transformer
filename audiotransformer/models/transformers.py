@@ -1,16 +1,21 @@
-import transformers
-
 from transformers import BertModel, BertConfig
 from transformers import ReformerModel, ReformerConfig, Trainer, TrainingArguments
+from audiotransformer.models.conv import MSResNet
 from torch import nn
 from torch.nn import functional as F
 
 
 class AudioTransformer(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1):
+    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1, use_conv_embedding=False):
         super(AudioTransformer, self).__init__()
+        self.use_conv_embedding = use_conv_embedding
+        self.hidden_size = d_model
+        if use_conv_embedding:
+            self.conv_embedding = MSResNet(1)
+            self.hidden_size = 768
+
         self.config = BertConfig(
-            hidden_size=d_model,
+            hidden_size=self.hidden_size,
             num_hidden_layers=num_layers,
             intermediate_size=dim_feedforward,
             num_attention_heads=nhead,
@@ -20,6 +25,9 @@ class AudioTransformer(nn.Module):
         self.decoder = SimpleLinearClassifier(d_model, num_classes, dropout)
 
     def forward(self, x):
+        if self.use_conv_embedding:
+            assert x.shape[-1] == 256
+            x = self.conv_embedding(x)
         x = self.encoder.forward(inputs_embeds=x)
         # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
         # the whole seq meaning. We are interested in the pooled output

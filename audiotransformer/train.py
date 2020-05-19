@@ -1,4 +1,5 @@
-from transformers import AdamW, get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
+from transformers import AdamW, get_linear_schedule_with_warmup
+
 IN_COLAB = True
 try:
     from google.colab import drive
@@ -10,14 +11,13 @@ if IN_COLAB:
 else:
     from tqdm import tqdm
 import time
-import math
 import h5py
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from audiotransformer.dataset import AudioDataset
 from audiotransformer import dataset
-from audiotransformer.models import AudioTransformer
+from models.transformers import AudioTransformer
 from sklearn.metrics import classification_report
 from glob import glob
 from torch.utils.tensorboard import SummaryWriter
