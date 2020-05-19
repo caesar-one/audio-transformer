@@ -27,7 +27,13 @@ class AudioTransformer(nn.Module):
     def forward(self, x):
         if self.use_conv_embedding:
             assert x.shape[-1] == 256
+            batch_size = x.shape[0]
+            # shape: (batch_size, seq_len, emb_size)
+            x = x.reshape(-1, 1, 256)
+            # shape: (batch_size * seq_len, 1, emb_size) where 1 is the conv number of channels
             x = self.conv_embedding(x)
+            x = x.reshape(batch_size, -1, 256)
+            # shape: (batch_size, seq_len, emb_size)
         x = self.encoder.forward(inputs_embeds=x)
         # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
         # the whole seq meaning. We are interested in the pooled output
