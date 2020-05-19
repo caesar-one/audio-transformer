@@ -31,7 +31,8 @@ class AudioTransformer(nn.Module):
             # shape: (batch_size, seq_len, emb_size)
             x = x.reshape(-1, 1, 256)
             # shape: (batch_size * seq_len, 1, emb_size) where 1 is the conv number of channels
-            x = self.conv_embedding(x)
+            x = self.conv_embedding(x) # returns a tuple with (classification, bottlenecks)
+            x = x[1] # we just need second element
             x = x.reshape(batch_size, -1, 256)
             # shape: (batch_size, seq_len, emb_size)
         x = self.encoder.forward(inputs_embeds=x)
