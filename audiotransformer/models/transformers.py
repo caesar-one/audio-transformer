@@ -6,14 +6,14 @@ from torch.nn import functional as F
 
 
 class AudioTransformer(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1, use_conv_embedding=False):
+    def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1, use_conv_embedding=False, drop_input=0.1):
         super(AudioTransformer, self).__init__()
         self.use_conv_embedding = use_conv_embedding
         self.hidden_size = d_model
         if use_conv_embedding:
             self.conv_embedding = MSResNet(1)
             self.hidden_size = 768
-
+        self.drop_input = nn.Dropout(drop_input)
         self.config = BertConfig(
             hidden_size=self.hidden_size,
             num_hidden_layers=num_layers,
@@ -35,6 +35,7 @@ class AudioTransformer(nn.Module):
             x = x[1] # we just need second element
             x = x.reshape(batch_size, -1, 768)
             # shape: (batch_size, seq_len, conv_emb_size)
+            x = self.drop_input(x)
         x = self.encoder.forward(inputs_embeds=x)
         # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
         # the whole seq meaning. We are interested in the pooled output
