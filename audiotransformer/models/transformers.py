@@ -19,7 +19,8 @@ class AudioTransformer(nn.Module):
             num_hidden_layers=num_layers,
             intermediate_size=dim_feedforward,
             num_attention_heads=nhead,
-            hidden_dropout_prob=dropout
+            hidden_dropout_prob=dropout,
+            output_attentions=True
         )
         self.encoder = BertModel(self.config)
         self.decoder = SimpleLinearClassifier(self.hidden_size, num_classes, dropout)
@@ -40,8 +41,9 @@ class AudioTransformer(nn.Module):
         # x = (hidden_states, pooled_output) where pooled means that the token is enforced to assume
         # the whole seq meaning. We are interested in the pooled output
         pooled = x[1]
+        attentions = x[2]
         out = self.decoder(pooled)
-        return out
+        return out, attentions
 
 
 class LinearClassifier(nn.Module):
