@@ -10,6 +10,7 @@ import torch
 DATASET_PATH = "../UrbanSound8K/audio/"
 METADATA_PATH = "../UrbanSound8K/metadata/UrbanSound8K.csv"
 
+
 class AudioDataset(Dataset):
     def __init__(self, X_desc, y_desc):
         """

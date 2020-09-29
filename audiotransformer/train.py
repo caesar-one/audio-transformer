@@ -32,7 +32,6 @@ adam_epsilon = 1e-8
 max_grad_norm = 1.0
 num_train_epochs = 3
 
-
 # Trains a single epoch with hyper-parameters provided
 def train(model, criterion, optimizer, data, device):
     model.train()  # Turn on the train mode
@@ -51,7 +50,6 @@ def train(model, criterion, optimizer, data, device):
         scheduler.step()
         total_loss += len(X) * loss.item()
     return total_loss / len(data.dataset)
-
 
 def evaluate(model, criterion, data, device):
     model.eval()  # Turn on the evaluation mode

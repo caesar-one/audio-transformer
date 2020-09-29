@@ -4,7 +4,6 @@ from audiotransformer.models.conv import MSResNet
 from torch import nn
 from torch.nn import functional as F
 
-
 class AudioTransformer(nn.Module):
     def __init__(self, d_model, nhead, dim_feedforward, num_layers, num_classes, dropout=0.1, use_conv_embedding=False, drop_input=0.1):
         super(AudioTransformer, self).__init__()
